@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { io } from "socket.io-client";
 import { playBeep } from "@/lib/audio";
-import { buttonStyle, getSocketUrl, rolePageStyle } from "@/lib/ui";
+import { useSignalSocket } from "@/lib/useSignalSocket";
+import { buttonStyle, rolePageStyle } from "@/lib/ui";
+import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
 
 export default function ReceiverPage() {
@@ -11,28 +12,27 @@ export default function ReceiverPage() {
   const readyRef = useRef(false);
   const [mounted, setMounted] = useState(false);
   const [pressed, setPressed] = useState(false);
+  const { socketRef, connected } = useSignalSocket("receiver");
 
   useEffect(() => {
     setMounted(true);
+  }, []);
 
-    const socket = io(getSocketUrl(), {
-      transports: ["websocket", "polling"],
-    });
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket) return;
 
-    socket.on("connect", () => {
-      socket.emit("join-receiver");
-    });
-
-    socket.on("play-sound", () => {
+    const onPlaySound = () => {
       const ctx = audioContextRef.current;
       if (!ctx || !readyRef.current) return;
       playBeep(ctx);
-    });
-
-    return () => {
-      socket.disconnect();
     };
-  }, []);
+
+    socket.on("play-sound", onPlaySound);
+    return () => {
+      socket.off("play-sound", onPlaySound);
+    };
+  }, [socketRef, connected]);
 
   async function enableSound() {
     setPressed(true);
@@ -56,6 +56,7 @@ export default function ReceiverPage() {
 
   return (
     <div style={rolePageStyle}>
+      <ConnectionStatus connected={connected} />
       <RoleSwitcher current="receiver" />
       <button
         type="button"

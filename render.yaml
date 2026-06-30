@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: signal-app-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    plan: free
+    envVars:
+      - key: CORS_ORIGIN
+        value: https://*.vercel.app
