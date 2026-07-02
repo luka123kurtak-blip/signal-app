@@ -1,17 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AppShell } from "@/components/AppShell";
+import { ConnectionStatus } from "@/components/ConnectionStatus";
+import { SignalButton } from "@/components/SignalButton";
 import { playBeep } from "@/lib/audio";
 import { useSignalSocket } from "@/lib/useSignalSocket";
-import { buttonStyle, rolePageStyle } from "@/lib/ui";
-import { ConnectionStatus } from "@/components/ConnectionStatus";
-import { RoleSwitcher } from "@/components/RoleSwitcher";
 
 export default function ReceiverPage() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const readyRef = useRef(false);
   const [mounted, setMounted] = useState(false);
   const [pressed, setPressed] = useState(false);
+  const [soundReady, setSoundReady] = useState(false);
   const { socketRef, connected } = useSignalSocket("receiver");
 
   useEffect(() => {
@@ -43,31 +44,31 @@ export default function ReceiverPage() {
       }
       await audioContextRef.current.resume();
       readyRef.current = true;
+      setSoundReady(true);
     } catch {
       readyRef.current = false;
+      setSoundReady(false);
     }
 
     setTimeout(() => setPressed(false), 200);
   }
 
   if (!mounted) {
-    return <div style={rolePageStyle} />;
+    return <main className="min-h-screen" />;
   }
 
   return (
-    <div style={rolePageStyle}>
+    <AppShell title="Отримувач">
       <ConnectionStatus connected={connected} />
-      <RoleSwitcher current="receiver" />
-      <button
-        type="button"
+      <SignalButton
+        variant="receiver"
+        pressed={pressed}
+        disabled={soundReady}
         onClick={enableSound}
         onPointerDown={() => setPressed(true)}
         onPointerUp={() => setTimeout(() => setPressed(false), 200)}
         onPointerLeave={() => setPressed(false)}
-        style={buttonStyle(pressed, "#9b59b6", "#7d3c98")}
-      >
-        Play sound
-      </button>
-    </div>
+      />
+    </AppShell>
   );
 }

@@ -1,27 +1,42 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RoleSwitcher } from "@/components/RoleSwitcher";
-import { pageStyle } from "@/lib/ui";
+import { AppShell } from "@/components/AppShell";
+import { ConnectionStatus } from "@/components/ConnectionStatus";
+import { SignalButton } from "@/components/SignalButton";
+import { useSignalSocket } from "@/lib/useSignalSocket";
 
-export default function Home() {
+export default function HomePage() {
   const [mounted, setMounted] = useState(false);
+  const [pressed, setPressed] = useState(false);
+  const { socketRef, connected } = useSignalSocket("sender");
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  function sendSignal() {
+    setPressed(true);
+    socketRef.current?.emit("ring");
+    setTimeout(() => setPressed(false), 200);
+  }
+
   if (!mounted) {
-    return <div style={pageStyle} />;
+    return <main className="min-h-screen" />;
   }
 
   return (
-    <div style={{ ...pageStyle, flexDirection: "column", gap: 24, padding: 24 }}>
-      <h1 style={{ fontSize: 28, margin: 0 }}>Signal App</h1>
-      <p style={{ margin: 0, color: "#666", textAlign: "center" }}>
-        Оберіть роль
-      </p>
-      <RoleSwitcher />
-    </div>
+    <AppShell title="Відправник">
+      <ConnectionStatus connected={connected} />
+      <SignalButton
+        variant="sender"
+        pressed={pressed}
+        disabled={!connected}
+        onClick={sendSignal}
+        onPointerDown={() => setPressed(true)}
+        onPointerUp={() => setTimeout(() => setPressed(false), 200)}
+        onPointerLeave={() => setPressed(false)}
+      />
+    </AppShell>
   );
 }
