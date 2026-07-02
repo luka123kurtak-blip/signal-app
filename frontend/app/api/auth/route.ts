@@ -1,6 +1,4 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { AUTH_COOKIE, getSiteAuthToken } from "@/lib/siteAuth";
 
 export async function POST(request: Request) {
   const sitePassword = process.env.SITE_PASSWORD?.trim();
@@ -19,16 +17,6 @@ export async function POST(request: Request) {
   if (password !== sitePassword) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
-
-  const token = await getSiteAuthToken(sitePassword);
-  const cookieStore = await cookies();
-  cookieStore.set(AUTH_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
 
   return NextResponse.json({ ok: true });
 }

@@ -1,10 +1,5 @@
-import { Suspense } from "react";
-import { LoginForm } from "@/components/LoginForm";
+import { redirect } from "next/navigation";
 
 export default function LoginPage() {
-  return (
-    <Suspense fallback={<main className="min-h-screen" />}>
-      <LoginForm />
-    </Suspense>
-  );
+  redirect("/");
 }

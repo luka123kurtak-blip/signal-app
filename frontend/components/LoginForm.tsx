@@ -3,8 +3,13 @@
 import { FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
+import { SESSION_AUTH_KEY } from "@/lib/siteAuth";
 
-export function LoginForm() {
+type LoginFormProps = {
+  onSuccess?: () => void;
+};
+
+export function LoginForm({ onSuccess }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next") || "/";
@@ -27,6 +32,13 @@ export function LoginForm() {
 
       if (!response.ok) {
         setError("Неправильний пароль");
+        return;
+      }
+
+      sessionStorage.setItem(SESSION_AUTH_KEY, "1");
+
+      if (onSuccess) {
+        onSuccess();
         return;
       }
 
