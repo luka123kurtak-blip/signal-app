@@ -3,16 +3,22 @@
 import { FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
-import { SESSION_AUTH_KEY } from "@/lib/siteAuth";
+import { type AppRole, getSessionAuthKey } from "@/lib/siteAuth";
 
 type LoginFormProps = {
+  role: AppRole;
   onSuccess?: () => void;
 };
 
-export function LoginForm({ onSuccess }: LoginFormProps) {
+const roleLabels: Record<AppRole, string> = {
+  sender: "відправника",
+  receiver: "отримувача",
+};
+
+export function LoginForm({ role, onSuccess }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") || "/";
+  const nextPath = searchParams.get("next") || (role === "receiver" ? "/receiver" : "/");
 
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,7 +33,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       const response = await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ password, role }),
       });
 
       if (!response.ok) {
@@ -35,7 +41,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         return;
       }
 
-      sessionStorage.setItem(SESSION_AUTH_KEY, "1");
+      sessionStorage.setItem(getSessionAuthKey(role), "1");
 
       if (onSuccess) {
         onSuccess();
@@ -52,7 +58,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   }
 
   return (
-    <AppShell title="Вхід" subtitle="Введи пароль для доступу до сайту">
+    <AppShell title="Вхід" subtitle={`Введи пароль для ${roleLabels[role]}`}>
       <form onSubmit={handleSubmit} className="flex w-full max-w-xs flex-col gap-4">
         <input
           type="password"
