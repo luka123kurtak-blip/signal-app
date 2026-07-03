@@ -36,7 +36,9 @@ export function LoginForm({ role, onSuccess }: LoginFormProps) {
         body: JSON.stringify({ password, role }),
       });
 
-      if (!response.ok) {
+      const result = (await response.json()) as { ok?: boolean };
+
+      if (!response.ok || result.ok !== true) {
         setError("Неправильний пароль");
         return;
       }

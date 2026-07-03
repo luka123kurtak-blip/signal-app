@@ -1,12 +1,28 @@
 import { NextResponse } from "next/server";
 import type { AppRole } from "@/lib/siteAuth";
 
-function getExpectedPassword(role: AppRole): string | undefined {
-  if (role === "receiver") {
-    return process.env.RECEIVER_PASSWORD?.trim();
+function normalizeEnvPassword(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1);
   }
 
-  return process.env.SENDER_PASSWORD?.trim() || process.env.SITE_PASSWORD?.trim();
+  return trimmed;
+}
+
+function getExpectedPassword(role: AppRole): string | undefined {
+  if (role === "receiver") {
+    return normalizeEnvPassword(process.env.RECEIVER_PASSWORD);
+  }
+
+  return normalizeEnvPassword(process.env.SENDER_PASSWORD);
 }
 
 export async function POST(request: Request) {
@@ -15,7 +31,7 @@ export async function POST(request: Request) {
 
   try {
     const body = (await request.json()) as { password?: string; role?: string };
-    password = body.password?.trim() ?? "";
+    password = body.password ?? "";
     role = body.role === "receiver" ? "receiver" : "sender";
   } catch {
     return NextResponse.json({ ok: false }, { status: 400 });
@@ -23,7 +39,7 @@ export async function POST(request: Request) {
 
   const expectedPassword = getExpectedPassword(role);
   if (!expectedPassword) {
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: false }, { status: 503 });
   }
 
   if (password !== expectedPassword) {
