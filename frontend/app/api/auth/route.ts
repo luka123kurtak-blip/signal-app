@@ -1,29 +1,6 @@
 import { NextResponse } from "next/server";
 import type { AppRole } from "@/lib/siteAuth";
-
-function normalizeEnvPassword(value: string | undefined): string | undefined {
-  if (!value) return undefined;
-
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-
-  if (
-    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-    (trimmed.startsWith("'") && trimmed.endsWith("'"))
-  ) {
-    return trimmed.slice(1, -1);
-  }
-
-  return trimmed;
-}
-
-function getExpectedPassword(role: AppRole): string | undefined {
-  if (role === "receiver") {
-    return normalizeEnvPassword(process.env.RECEIVER_PASSWORD);
-  }
-
-  return normalizeEnvPassword(process.env.SENDER_PASSWORD);
-}
+import { getRolePassword } from "@/lib/rolePasswords";
 
 export async function POST(request: Request) {
   let password = "";
@@ -37,12 +14,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  const expectedPassword = getExpectedPassword(role);
-  if (!expectedPassword) {
-    return NextResponse.json({ ok: false }, { status: 503 });
-  }
-
-  if (password !== expectedPassword) {
+  if (password !== getRolePassword(role)) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
 
