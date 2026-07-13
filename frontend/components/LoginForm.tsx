@@ -71,7 +71,18 @@ export function LoginForm({ role, onSuccess }: LoginFormProps) {
           }}
           placeholder="Пароль"
           autoComplete="current-password"
-          className="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-3 text-center text-white outline-none transition focus:border-white/25"
+          className="w-full rounded-xl border px-4 py-3 text-center outline-none transition"
+          style={{
+            color: "var(--text)",
+            backgroundColor: "var(--input-bg)",
+            borderColor: "var(--input-border)",
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = "var(--input-focus-border)";
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = "var(--input-border)";
+          }}
         />
 
         {error && (
@@ -81,7 +92,19 @@ export function LoginForm({ role, onSuccess }: LoginFormProps) {
         <button
           type="submit"
           disabled={loading || !password}
-          className="rounded-xl bg-slate-100 px-4 py-3 font-semibold text-slate-900 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-xl px-4 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
+          style={{
+            backgroundColor: "var(--btn-submit-bg)",
+            color: "var(--btn-submit-text)",
+          }}
+          onMouseEnter={(e) => {
+            if (!loading && password) {
+              e.currentTarget.style.backgroundColor = "var(--btn-submit-hover)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "var(--btn-submit-bg)";
+          }}
         >
           {loading ? "Перевірка…" : "Увійти"}
         </button>
